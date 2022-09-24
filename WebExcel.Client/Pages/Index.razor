@@ -1,9 +1,122 @@
 ﻿@page "/"
+@inject HttpClient Http
+@inject HttpClient HttpClient
 
-<PageTitle>Index</PageTitle>
+<PageTitle>Main</PageTitle>
 
-<h1>Hello, world!</h1>
+<button class="btn btn-primary" @onclick="StartProcess">Click me, bro</button>
 
-Welcome to your new app.
+@if (recieved_dict != null)
+{
+    <table class="table">
+        <thead>
+            <tr>
+            @* foreach(var person in people)
+            {
+                Console.WriteLine($"key: {person.Key}  value: {person.Value}");
+            }*@
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+                @foreach (var header_item in recieved_dict)
+                {
+                    <th>@header_item.Key</th>
+                }
+                @*<th>Date</th>
+                <th>Temp. (C)</th>
+                <th>Temp. (F)</th>
+                <th>Summary</th>*@
+            </tr>
+        </thead>
+        <tbody>
+            @*@code {
+                @foreach (var header_item in recieved_dict)
+            }*@
+
+            @foreach (var header_item in recieved_dict)
+            {
+                 @*<tr>
+                    <td>@forecast.Date.ToShortDateString()</td>
+                    <td>@forecast.TemperatureC</td>
+                    <td>@forecast.TemperatureF</td>
+                    <td>@forecast.Summary</td>
+                </tr>
+                <th>@header_item.Key</th>*@
+            }
+
+            @*@foreach (var forecast in forecasts)
+            {
+                <tr>
+                    <td>@forecast.Date.ToShortDateString()</td>
+                    <td>@forecast.TemperatureC</td>
+                    <td>@forecast.TemperatureF</td>
+                    <td>@forecast.Summary</td>
+                </tr>
+            }*@
+        </tbody>
+    </table>
+    <br />
+    <br />
+    <br />
+}
+
+
+
+@if (forecasts != null)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Temp. (C)</th>
+                <th>Temp. (F)</th>
+                <th>Summary</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var forecast in forecasts)
+            {
+                <tr>
+                    <td>@forecast.Date.ToShortDateString()</td>
+                    <td>@forecast.TemperatureC</td>
+                    <td>@forecast.TemperatureF</td>
+                    <td>@forecast.Summary</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+@code {
+    private String message = "Initial state";
+    private const String SERVER_URL = "https://localhost:7127/test";
+    private int currentCount = 0;
+    private WeatherForecast[]? forecasts;
+
+    public Dictionary<string, List<string>>? recieved_dict;
+    //public WebExcel.Client.Models.Article? article;
+
+    public class WeatherForecast
+    {
+        public DateTime Date { get; set; }
+
+        public int TemperatureC { get; set; }
+
+        public string? Summary { get; set; }
+
+        public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    }
+
+    async Task StartProcess()
+    {
+        var postBody = new { Title = "Blazor POST Request Example" };
+        using var response = await HttpClient.PostAsJsonAsync("https://reqres.in/api/articles", postBody);
+        using var my_response = await HttpClient.PostAsJsonAsync(SERVER_URL, new { });
+
+        recieved_dict = await my_response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>();
+        //article = await response.Content.ReadFromJsonAsync<WebExcel.Client.Models.Article>();
+
+        currentCount++;
+        message = "Clicked";
+        forecasts = await Http.GetFromJsonAsync<WeatherForecast[]>("sample-data/weather.json");
+    }
+}
