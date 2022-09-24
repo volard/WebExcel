@@ -1,6 +1,7 @@
 ﻿@page "/"
 @inject HttpClient Http
 @inject HttpClient HttpClient
+@using System.Net.Http.Headers
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.Extensions.Logging
 
@@ -82,43 +83,46 @@
 @code {
     private long maxFileSize = 1024 * 15;
     private bool isLoading;
+
     private String message = "Initial state";
     private const String SERVER_URL = "https://localhost:7273/test";
-    //private WeatherForecast[]? forecasts;
 
     public Dictionary<string, List<string>>? recieved_dict;
-    //public WebExcel.Client.Models.Article? article;
 
-    //public class WeatherForecast
-    //{
-    //    public DateTime Date { get; set; }
-
-    //    public int TemperatureC { get; set; }
-
-    //    public string? Summary { get; set; }
-
-    //    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-    //}
 
     private List<IBrowserFile> loadedFiles = new();
 
-    private  void LoadFiles(InputFileChangeEventArgs e)
+    private async Task LoadFiles(InputFileChangeEventArgs e)
     {
-        foreach (var file in e.GetMultipleFiles(1))
+        using var content = new MultipartFormDataContent();
+        var file = e.GetMultipleFiles(1)[0];
+        var upload = false;
+        try
         {
-            try
-            {
-                loadedFiles.Add(file);
-            }
-            catch (Exception ex)
-            {
-                //Logger.LogError("File: {Filename} Error: {Error}", 
-                //    file.Name, ex.Message);
-                message = ex.Message;
-            }
+            var fileContent = new StreamContent(file.OpenReadStream());
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType);
+            content.Add(
+                content: fileContent,
+                name: "\"files\"",
+                fileName: file.Name);
+            upload = true;
+
+            //await using FileStream fs = new(path, FileMode.Create);
+            //await browserFile.OpenReadStream().CopyToAsync(fs);
         }
-        //await using FileStream fs = new(path, FileMode.Create);
-        //await browserFile.OpenReadStream().CopyToAsync(fs);
+        catch (Exception ex)
+        {
+            //Logger.LogError("File: {Filename} Error: {Error}",
+            //    file.Name, ex.Message);
+            message = ex.Message;
+        }
+
+        if (upload)
+        {
+            using var file_response = await HttpClient.PostAsJsonAsync("https://localhost:7273/upload", content);
+            String answer = await file_response.Content.ReadAsStringAsync();
+            message = answer;
+        }
     }
 
     async Task StartProcess()
@@ -130,9 +134,7 @@
             using var my_response = await HttpClient.PostAsJsonAsync("https://localhost:7273/test", postBody);
             recieved_dict = await my_response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>();
             //message = await my_response.Content.ReadAsStringAsync();
-            //article = await response.Content.ReadFromJsonAsync<WebExcel.Client.Models.Article>();
 
-            //message = "Clicked";
             //forecasts = await Http.GetFromJsonAsync<WeatherForecast[]>("sample-data/weather.json");
         }
         catch (Exception ex)

@@ -19,5 +19,6 @@ app.MapPost("/test", () =>
     return info;
 });
 
-
+app.UseRouting();
+app.MapControllers();
 app.Run();
