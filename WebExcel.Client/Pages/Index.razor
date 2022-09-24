@@ -13,9 +13,9 @@
     <table class="table">
         <thead>
             <tr>
-            @* foreach(var person in people)
+                @* foreach(var person in people)
             {
-                Console.WriteLine($"key: {person.Key}  value: {person.Value}");
+            Console.WriteLine($"key: {person.Key}  value: {person.Value}");
             }*@
 
                 @foreach (var header_item in recieved_dict)
@@ -23,36 +23,36 @@
                     <th>@header_item.Key</th>
                 }
                 @*<th>Date</th>
-                <th>Temp. (C)</th>
-                <th>Temp. (F)</th>
-                <th>Summary</th>*@
+            <th>Temp. (C)</th>
+            <th>Temp. (F)</th>
+            <th>Summary</th>*@
             </tr>
         </thead>
         <tbody>
             @*@code {
-                @foreach (var header_item in recieved_dict)
-            }*@
+        @foreach (var header_item in recieved_dict)
+        }*@
 
             @foreach (var header_item in recieved_dict)
             {
-                 @*<tr>
-                    <td>@forecast.Date.ToShortDateString()</td>
-                    <td>@forecast.TemperatureC</td>
-                    <td>@forecast.TemperatureF</td>
-                    <td>@forecast.Summary</td>
-                </tr>
-                <th>@header_item.Key</th>*@
+                @*<tr>
+        <td>@forecast.Date.ToShortDateString()</td>
+        <td>@forecast.TemperatureC</td>
+        <td>@forecast.TemperatureF</td>
+        <td>@forecast.Summary</td>
+        </tr>
+        <th>@header_item.Key</th>*@
             }
 
             @*@foreach (var forecast in forecasts)
-            {
-                <tr>
-                    <td>@forecast.Date.ToShortDateString()</td>
-                    <td>@forecast.TemperatureC</td>
-                    <td>@forecast.TemperatureF</td>
-                    <td>@forecast.Summary</td>
-                </tr>
-            }*@
+        {
+        <tr>
+        <td>@forecast.Date.ToShortDateString()</td>
+        <td>@forecast.TemperatureC</td>
+        <td>@forecast.TemperatureF</td>
+        <td>@forecast.Summary</td>
+        </tr>
+        }*@
         </tbody>
     </table>
     <br />
@@ -111,14 +111,22 @@
     async Task StartProcess()
     {
         var postBody = new { Title = "Blazor POST Request Example" };
-        using var response = await HttpClient.PostAsJsonAsync("https://reqres.in/api/articles", postBody);
-        using var my_response = await HttpClient.PostAsJsonAsync(SERVER_URL, new { });
+        try
+        {
+            //using var response = await HttpClient.PostAsJsonAsync("https://reqres.in/api/articles", postBody);
+            using var my_response = await HttpClient.PostAsJsonAsync("https://localhost:7273/test", postBody);
+            //recieved_dict = await my_response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>();
+            message = await my_response.Content.ReadAsStringAsync();
+            //article = await response.Content.ReadFromJsonAsync<WebExcel.Client.Models.Article>();
 
-        recieved_dict = await my_response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>();
-        //article = await response.Content.ReadFromJsonAsync<WebExcel.Client.Models.Article>();
+            currentCount++;
+            //message = "Clicked";
+            //forecasts = await Http.GetFromJsonAsync<WeatherForecast[]>("sample-data/weather.json");
+        }
+        catch (Exception ex)
+        {
+            message = ex.ToString();
+        }
 
-        currentCount++;
-        message = "Clicked";
-        forecasts = await Http.GetFromJsonAsync<WeatherForecast[]>("sample-data/weather.json");
     }
 }
