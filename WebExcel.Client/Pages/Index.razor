@@ -6,6 +6,8 @@
 
 <button class="btn btn-primary" @onclick="StartProcess">Click me, bro</button>
 
+<p>@message</p>
+
 @if (recieved_dict != null)
 {
     <table class="table">
@@ -88,7 +90,7 @@
 
 @code {
     private String message = "Initial state";
-    private const String SERVER_URL = "https://localhost:7127/test";
+    private const String SERVER_URL = "https://localhost:7273/test";
     private int currentCount = 0;
     private WeatherForecast[]? forecasts;
 
