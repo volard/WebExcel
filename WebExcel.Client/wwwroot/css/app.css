@@ -7,7 +7,9 @@ html, body {
 div#app {
     width: 100vw;
     height: 100vh;
+    background: #444343;
 }
+
 
 footer {
     width: 100vw;

@@ -10,4 +10,8 @@
     <Folder Include="Development\Uploads\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\WebExcel.Shared\WebExcel.Shared.csproj" />
+  </ItemGroup>
+
 </Project>

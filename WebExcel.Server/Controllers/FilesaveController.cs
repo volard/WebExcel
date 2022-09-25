@@ -1,11 +1,12 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿//using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using WebExcel.Shared;
 
 namespace WebExcel.Server.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     public class FilesaveController : ControllerBase
     {
         private readonly IWebHostEnvironment env;
@@ -19,18 +20,19 @@ namespace WebExcel.Server.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<string>> PostFile(
+        public async Task<ActionResult<UploadResult>> PostFile(
             [FromForm] IFormFile file)
         {
-            long maxFileSize = 1024 * 15;
-            var resourcePath = new Uri($"{Request.Scheme}://{Request.Host}/");
+            
+            long maxFileSize = 1024 * 65;
+            //var resourcePath = new Uri($"{Request.Scheme}://{Request.Host}/");
 
             var uploadResult = new UploadResult();
             string trustedFileNameForFileStorage;
             var untrustedFileName = file.FileName;
             uploadResult.FileName = untrustedFileName;
-            var trustedFileNameForDisplay =
-                WebUtility.HtmlEncode(untrustedFileName);
+            var trustedFileNameForDisplay = WebUtility.HtmlEncode(untrustedFileName);
+            logger.LogInformation(Request.ToString());
 
             if (file.Length == 0)
             {
@@ -49,16 +51,19 @@ namespace WebExcel.Server.Controllers
             {
                 try
                 {
+                    //trustedFileNameForFileStorage = Path.GetRandomFileName() + Path.GetExtension(file.FileName);
                     trustedFileNameForFileStorage = Path.GetRandomFileName();
                     var path = Path.Combine(env.ContentRootPath,
-                        env.EnvironmentName, "unsafe_uploads",
+                        env.EnvironmentName, "Uploads",
                         trustedFileNameForFileStorage);
+                    Console.WriteLine(path);
 
                     await using FileStream fs = new(path, FileMode.Create);
                     await file.CopyToAsync(fs);
 
                     logger.LogInformation("{FileName} saved at {Path}",
                         trustedFileNameForDisplay, path);
+
                     uploadResult.Uploaded = true;
                     uploadResult.StoredFileName = trustedFileNameForFileStorage;
                 }
@@ -70,8 +75,7 @@ namespace WebExcel.Server.Controllers
                 }
             }
 
-            //return new CreatedResult(resourcePath, uploadResults);
-            return "Saved successfullly";
+            return uploadResult;
         }
     }
 }
