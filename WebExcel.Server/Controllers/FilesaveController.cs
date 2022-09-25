@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Cors;
+﻿using ClosedXML.Excel;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using WebExcel.Shared;
@@ -24,6 +25,11 @@ namespace WebExcel.Server.Controllers
         public async Task<IActionResult> PostFile(
             [FromForm] IFormFile file)
         {
+            // To be sure about CORS support
+            Response.Headers.AccessControlAllowOrigin = "https://localhost:7062";
+            Response.Headers.AccessControlAllowHeaders = "multipart/form-data";
+            Response.Headers.AccessControlAllowMethods = "POST";
+
             long maxFileSize = 1024 * 1000;
             var resourcePath = new Uri($"{Request.Scheme}://{Request.Host}/");
 
@@ -68,8 +74,8 @@ namespace WebExcel.Server.Controllers
                     await using FileStream fs = new(path, FileMode.Create);
                     await file.CopyToAsync(fs);
 
-                    logger.LogInformation("{FileName} saved at {Path}", 
-                        trustedFileName, 
+                    logger.LogInformation("{FileName} saved at {Path}",
+                        trustedFileName,
                         resourcePath.ToString() + env.EnvironmentName + "/Upload"
                     );
 
@@ -88,22 +94,73 @@ namespace WebExcel.Server.Controllers
                         trustedFileName, ex.Message);
                     uploadResult.ErrorCode = 1;
                 }
+
+                try
+                {
+                    uploadResult.Data = GetParsedData(path);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError("parsing is shit: {exception}", ex.Message);
+                    uploadResult.ErrorCode = 5;
+                }
             }
-
-            // To be sure about CORS support
-            Response.Headers.AccessControlAllowOrigin = "https://localhost:7062";
-            Response.Headers.AccessControlAllowHeaders = "multipart/form-data";
-            Response.Headers.AccessControlAllowMethods = "POST";
-
-            // Test data plaholder
-            uploadResult.Data = new()
-            {
-                ["This stuff FROM SERVER BROOOO"] = new List<string>() { "Tom", "Bob", "Sam", "buba", "pupa" },
-                ["clients"] = new List<string>() { "Tom", "Bob", "Sam" },
-                ["listeners"] = new List<string>() { "asdf", "sdfafsdas", "Sasdfafafsasm" }
-            };
-
             return Ok(uploadResult);
         }
+
+        private Dictionary<string, List<string>> GetParsedData(string filePath)
+        {
+            var workbook = new XLWorkbook(filePath);
+            if (workbook.IsProtected)
+            {
+                throw new Exception("The WorkBook is protected somehow. I won't open it sry");
+            }
+            if (workbook.IsPasswordProtected)
+            {
+                throw new Exception("The WorkBook is protected with a password");
+            }
+            if (workbook.Worksheets.Count == 0)
+            {
+                throw new Exception("WorkBook doesn't contain worksheets");
+            }
+
+            Dictionary<string, List<string>> output = new();
+            var worksheet = workbook.Worksheet(1);
+
+            var firstRowUsed = worksheet.FirstRowUsed();
+            if (firstRowUsed is null)
+            {
+                throw new Exception("I guiess you have empty worksheet or smth");
+            }
+
+            foreach(var cell in firstRowUsed.Cells())
+            {
+                output[cell.GetValue<string>()] = new List<string>();
+                //output["headers"].Add(cell.GetValue<string>());
+            }
+
+
+
+            //int lastrow = ws.LastRowUsed().RowNumber();
+            //var rows = ws.Rows(1, lastrow);
+            //foreach (IXLRow row in rows)
+            //{
+            //    if (row.IsEmpty())
+            //        row.Delete();
+            //}
+            //foreach(var cell in categoryRow.Cells)
+            //{
+
+            //}
+
+            //return new()
+            //{
+            //    ["This stuff FROM SERVER BROOOO"] = new List<string>() { "Tom", "Bob", "Sam", "buba", "pupa" },
+            //    ["clients"] = new List<string>() { "Tom", "Bob", "Sam" },
+            //    ["listeners"] = new List<string>() { "asdf", "sdfafsdas", "Sasdfafafsasm" }
+            //};
+            return output;
+        }
+
     }
 }
