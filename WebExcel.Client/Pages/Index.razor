@@ -4,127 +4,122 @@
 @using System.Net.Http.Headers
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.Extensions.Logging
-@using WebExcel.Shared
+@*@using WebExcel.Shared*@
 @using System.Text;
 @using System.Text.Json;
 
 <PageTitle>Main</PageTitle>
 
 @*<button class="btn btn-primary" @onclick="StartProcess">Click me, bro</button>*@
-<InputFile  multiple/>
-@*<p>
-    <label>
-        Max file size:
-        <input type="number" @bind="maxFileSize" />
-    </label>
-</p>*@
+<InputFile OnChange="@LoadFiles" />
+<p> Max file size: @maxFileSize</p>
+<br />
+<p>@message</p>
 
-@*<p>@message</p>
-
-@if (recieved_dict != null)
-{
-    <table class="table">
-        <thead>
-            <tr>
-                 foreach(var person in people)
-            {
-            Console.WriteLine($"key: {person.Key}  value: {person.Value}");
-            }
-
-                @foreach (var header_item in recieved_dict)
-                {
-                    <th>@header_item.Key</th>
-                }
-                <th>Date</th>
-            <th>Temp. (C)</th>
-            <th>Temp. (F)</th>
-            <th>Summary</th>
-            </tr>
-        </thead>
-        <tbody>
-            @code {
-        @foreach (var header_item in recieved_dict)
-        }
-
-            @foreach (var header_item in recieved_dict)
-            {
-                <tr>
-        <td>@forecast.Date.ToShortDateString()</td>
-        <td>@forecast.TemperatureC</td>
-        <td>@forecast.TemperatureF</td>
-        <td>@forecast.Summary</td>
-        </tr>
-        <th>@header_item.Key</th>
-            }
-
-            @foreach (var forecast in forecasts)
-        {
-        <tr>
-        <td>@forecast.Date.ToShortDateString()</td>
-        <td>@forecast.TemperatureC</td>
-        <td>@forecast.TemperatureF</td>
-        <td>@forecast.Summary</td>
-        </tr>
-        }
-        </tbody>
-    </table>
-    <br />
-    <br />
-    <br />
-}*@
-@*
 @if (uploadResult != null)
 {
-    <p>Actual file name: @uploadResult.FileName</p>
-    <p>Stored file name: @uploadResult.StoredFileName</p>
-}*@
+    if (uploadResult.Uploaded && uploadResult.Data != null)
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    Console.WriteLine($"key: {person.Key}  value: {person.Value}");
 
+                    @foreach (var header_item in uploadResult.Data)
+                    {
+                        <th>@header_item.Key</th>
+                    }   
+                </tr>
+            </thead>
+            <tbody>
+                <tr>Im empty here for a lil bit ok dude?</tr>
+                @*@foreach (var header_item in recieved_dict)
+                {
+                    <tr>
+                        <td>@forecast.Date.ToShortDateString()</td>
+                        <td>@forecast.TemperatureC</td>
+                        <td>@forecast.TemperatureF</td>
+                        <td>@forecast.Summary</td>
+                    </tr>
+                    <th>@header_item.Key</th>
+                }*@
 
+            </tbody>
+        </table>
+        <br />
+        <br />
+        <br />
+    }
+}
 
 @code {
-    //private long maxFileSize = 1024 * 65;
-    //private bool isLoading;
-    //UploadResult? uploadResult;
+    private long maxFileSize = 1024 * 1000;
+    private bool isLoading;
+    public class UploadResult
+    {
+        public Dictionary<string, List<string>>? Data { get; set; }
+        public bool Uploaded { get; set; }
+        public string? FileName { get; set; }
+        public string? StoredFileName { get; set; }
+        public int ErrorCode { get; set; }
+    }
+    UploadResult? uploadResult;
 
-    //private String message = "Initial state";
+    private String message = "Initial state";
 
-    //public Dictionary<string, List<string>>? recieved_dict;
+    async Task LoadFiles(InputFileChangeEventArgs e)
+    {
 
-    //private List<IBrowserFile> loadedFiles = new();
-
-    //private async Task LoadFiles(InputFileChangeEventArgs e)
-    //{
         //using var content = new MultipartFormDataContent();
-        //var file = e.GetMultipleFiles(1)[0];
-        //var upload = false;
-        //try
-        //{
+        var file = e.GetMultipleFiles(1)[0];
+        if (Path.GetExtension(file.Name) != ".xlsx")
+        {
+            message = "Only Excel file's type acceptable";
+            return;
+        }
+        message += "U'll never see that brooooo";
+        var upload = false;
+        try
+        {
+
             //var fileContent = new StreamContent(file.OpenReadStream());
-            //fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse(file.ContentType);
+            //fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse(file.ContentType); 
             //content.Add(
-            //    content: content,
+            //    content: fileContent,
             //    name: "\"files\"",
             //    fileName: file.Name
             //);
             //upload = true;
             //message += content;
+            
 
-            //var content1 = new MultipartFormDataContent();
-            //var fileContent1 = new StreamContent(file.OpenReadStream());
-            //fileContent1.Headers.ContentType = MediaTypeHeaderValue.Parse(file.ContentType);
-            //content1.Add(fileContent1, "file", "coolfilename.xlsx");
+            var content1 = new MultipartFormDataContent();
+            var fileContent1 = new StreamContent(file.OpenReadStream(maxFileSize));
+            message = "cliecked     ";
+            message += Path.GetExtension(file.Name) + "                     ";
+
+            message += (new MediaTypeHeaderValue("multipart/form-data")).ToString() +"        ";
+
+            fileContent1.Headers.ContentType = new MediaTypeHeaderValue("multipart/form-data");
+
+            content1.Add(fileContent1, "\"file\"", file.Name);
+            using var result_api = await Http.PostAsync("https://localhost:7273/api/filesave", content1);
+            //uploadResult = await result_api.Content.ReadFromJsonAsync<UploadResult>();
+            //message += uploadResult?.FileName ?? "No name found((      ";
+            message += await result_api.Content.ReadAsStringAsync();
+
 
             //var response = await Http.PostAsync("https:localhost:7273/api/filesave", content1);
             //message = response.ToString();
             //await using FileStream fs = new(path, FileMode.Create);
             //await browserFile.OpenReadStream().CopyToAsync(fs);
 
-            //if (upload)
-            //{
-            //    using var file_response = await Http.PostAsync("https:localhost:7273/api/filesave", content);
-            //    uploadResult = await file_response.Content.ReadFromJsonAsync<UploadResult>();
-            //    string answer = await file_response.Content.ReadAsStringAsync();
-            //    message += answer;
+            if (upload)
+            {
+                
+                //uploadResult = await file_response.Content.ReadFromJsonAsync<UploadResult>();
+                //string answer = await file_response.Content.ReadAsStringAsync();
+                //message += answer;
 
                 //if (uploadResult?.Uploaded ?? false)
                 //{
@@ -135,29 +130,29 @@
                 //    message = "Some problems...";
                 //}
 
-            //}
-        //}
-        //catch (Exception ex)
-        //{
-        //    Logger.LogError("File: {Filename} Error: {Error}",
-        //        file.Name, ex.Message);
-        //    message += ex.Message;
-        //}
+            }
+        }
+        catch (Exception ex)
+        {
+            //Logger.LogError("File: {Filename} Error: {Error}",
+            //    file.Name, ex.Message);
+            message += ex.Message;
+        }
 
 
-    //}
+    }
 
     //async Task StartProcess()
     //{
     //    var postBody = new { Title = "Blazor POST Request Example" };
     //    try
     //    {
-    //        //using var response = await HttpClient.PostAsJsonAsync("https://reqres.in/api/articles", postBody);
-    //        using var my_response = await HttpClient.PostAsJsonAsync("https://localhost:7273/test", postBody);
+    //        using var response = await HttpClient.PostAsJsonAsync("https:reqres.in/api/articles", postBody);
+    //        using var my_response = await HttpClient.PostAsJsonAsync("https:localhost:7273/test", postBody);
     //        recieved_dict = await my_response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>();
-    //        //message = await my_response.Content.ReadAsStringAsync();
+    //        message = await response.Content.ReadAsStringAsync();
 
-    //        //forecasts = await Http.GetFromJsonAsync<WeatherForecast[]>("sample-data/weather.json");
+    //        forecasts = await Http.GetFromJsonAsync<WeatherForecast[]>("sample-data/weather.json");
     //    }
     //    catch (Exception ex)
     //    {
