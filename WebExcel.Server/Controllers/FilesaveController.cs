@@ -113,15 +113,15 @@ namespace WebExcel.Server.Controllers
             var workbook = new XLWorkbook(filePath);
             if (workbook.IsProtected)
             {
-                throw new Exception("The WorkBook is protected somehow. I won't open it sry");
+                throw new Exception("The WorkBook is protected and can't be opened");
             }
             if (workbook.IsPasswordProtected)
             {
-                throw new Exception("The WorkBook is protected with a password");
+                throw new Exception("The WorkBook is protected with a password and can't be opened");
             }
             if (workbook.Worksheets.Count == 0)
             {
-                throw new Exception("WorkBook doesn't contain worksheets");
+                throw new Exception("WorkBook doesn't contain any worksheets");
             }
 
             Dictionary<string, List<string>> output = new();
@@ -130,35 +130,42 @@ namespace WebExcel.Server.Controllers
             var firstRowUsed = worksheet.FirstRowUsed();
             if (firstRowUsed is null)
             {
-                throw new Exception("I guiess you have empty worksheet or smth");
+                throw new Exception("Worksheet is empty - first used row in the worksheet haven't found");
             }
 
-            foreach(var cell in firstRowUsed.Cells())
+            var content = worksheet.Range(
+                firstRowUsed.RowBelow().RowNumber(),
+                firstRowUsed.FirstCellUsed().Address.ColumnNumber,
+
+                worksheet.LastRowUsed().RowNumber(),
+                firstRowUsed.LastCellUsed().Address.ColumnNumber
+            );
+
+            foreach (var cell in firstRowUsed.Cells())
             {
-                output[cell.GetValue<string>()] = new List<string>();
-                //output["headers"].Add(cell.GetValue<string>());
+                var underHeaderColumnRange = worksheet.Range(
+                    firstRowUsed.FirstCellUsed().Address,
+
+                    worksheet.Column(firstRowUsed.FirstCellUsed().Address.ColumnNumber)
+                        .LastCellUsed()
+                        .Address
+                );
+
+                output[cell.GetValue<string>()] = underHeaderColumnRange.CellsUsed()
+                    .Select(c => 
+                        {
+                            try
+                            {
+                                return c.GetValue<string>();
+                            } catch (ArgumentException)
+                            {
+                                return "";
+                            }                                            
+                        }
+                    )
+                    .ToList();
             }
 
-
-
-            //int lastrow = ws.LastRowUsed().RowNumber();
-            //var rows = ws.Rows(1, lastrow);
-            //foreach (IXLRow row in rows)
-            //{
-            //    if (row.IsEmpty())
-            //        row.Delete();
-            //}
-            //foreach(var cell in categoryRow.Cells)
-            //{
-
-            //}
-
-            //return new()
-            //{
-            //    ["This stuff FROM SERVER BROOOO"] = new List<string>() { "Tom", "Bob", "Sam", "buba", "pupa" },
-            //    ["clients"] = new List<string>() { "Tom", "Bob", "Sam" },
-            //    ["listeners"] = new List<string>() { "asdf", "sdfafsdas", "Sasdfafafsasm" }
-            //};
             return output;
         }
 
