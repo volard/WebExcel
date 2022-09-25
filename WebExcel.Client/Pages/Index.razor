@@ -10,17 +10,19 @@
 
 <PageTitle>Main</PageTitle>
 
-@*<button class="btn btn-primary" @onclick="StartProcess">Click me, bro</button>*@
-<InputFile OnChange="@LoadFiles" />
-<p> Max file size: @maxFileSize</p>
-<br />
-<p>@message</p>
+
+
+<label for="filePicker" style="cursor:pointer;">
+    <button type="button" class="main-button btn btn-primary btn-lg">Select a file</button>
+</label>
+<InputFile id="filePicker" style="display: none;" class="form-control" OnChange="@LoadFiles" />
+
 
 @if (uploadResult != null)
 {
     if (uploadResult.Uploaded && uploadResult.Data != null)
     {
-        <table class="table">
+        <table id="datatable" class="table table-hover table-bordered">
             <thead>
                 <tr>
                     @foreach (var property in uploadResult.Data[0])

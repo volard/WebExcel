@@ -2,20 +2,71 @@
 
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    touch-action: none;
+    -webkit-user-select: none;
+}
+
+footer, main {
+    margin: 0;
+    width: 100%;
+}
+
+main {
+    height: 100%;
+    position: relative;
 }
 
 div#app {
-    width: 100vw;
     height: 100vh;
-    background: #444343;
+    position: relative;
+}
+
+th {
+    text-align: center;
+}
+
+.btn-styling {
+    display: button;
+}
+
+.main-button:hover{
+    cursor: pointer;
+}
+
+.main-button {
+    pointer-events: none;
+}
+
+table#datatable {
+    top: 15%;
+    position: relative;
+    width: 80%;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+
+label {
+    cursor: pointer;
+    position: relative;
+    left: 50%;
+    top: 10%;
+    transform: translateX(-50%);
+    margin-bottom: 1rem;
+}
+
+.preloader {
+    position: absolute;
+    top:50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 
 footer {
-    width: 100vw;
     padding: 1rem;
-    position: absolute;
-    bottom: 0px;
     text-align: center;
 }
 
