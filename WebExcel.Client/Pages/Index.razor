@@ -23,25 +23,22 @@
         <table class="table">
             <thead>
                 <tr>
-                    @foreach (var header_item in uploadResult.Data)
+                    @foreach (var property in uploadResult.Data[0])
                     {
-                        <th>@header_item.Key</th>
+                        <th>@property.Key</th>
                     }
                 </tr>
             </thead>
             <tbody>
-                <tr>Im empty here for a lil bit ok dude?</tr>
-                @*@foreach (var header_item in recieved_dict)
+                @foreach (var record in uploadResult.Data)
                 {
                     <tr>
-                        <td>@forecast.Date.ToShortDateString()</td>
-                        <td>@forecast.TemperatureC</td>
-                        <td>@forecast.TemperatureF</td>
-                        <td>@forecast.Summary</td>
+                        @foreach (var property in record)
+                        {
+                            <td>@property.Value</td>
+                        }
                     </tr>
-                    <th>@header_item.Key</th>
-                }*@
-
+                }
             </tbody>
         </table>
     }
