@@ -1,24 +1,10 @@
-﻿//using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Cors;
+﻿using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
-using System.Globalization;
 using System.Net;
-using System.Text;
-using System.IO;
-//using WebExcel.Shared;
+using WebExcel.Shared;
 
 namespace WebExcel.Server.Controllers
 {
-    public class UploadResult
-    {
-        public Dictionary<string, List<string>>? Data { get; set; }
-        public bool Uploaded { get; set; }
-        public string? FileName { get; set; }
-        public string? StoredFileName { get; set; }
-        public int ErrorCode { get; set; }
-    }
-
-
     [ApiController]
     [Route("api/[controller]")]
     public class FilesaveController : ControllerBase
@@ -104,10 +90,12 @@ namespace WebExcel.Server.Controllers
                 }
             }
 
+            // To be sure about CORS support
             Response.Headers.AccessControlAllowOrigin = "https://localhost:7062";
             Response.Headers.AccessControlAllowHeaders = "multipart/form-data";
             Response.Headers.AccessControlAllowMethods = "POST";
 
+            // Test data plaholder
             uploadResult.Data = new()
             {
                 ["This stuff FROM SERVER BROOOO"] = new List<string>() { "Tom", "Bob", "Sam", "buba", "pupa" },

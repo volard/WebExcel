@@ -25,16 +25,6 @@ var app = builder.Build();
 
 app.MapGet("/", () => "Hello World!");
 
-app.MapPost("/test", () =>
-{
-    Dictionary<string, List<String>> info = new()
-    {
-        ["clients"] = new List<string>() { "Tom", "Bob", "Sam" },
-        ["listeners"] = new List<string>() { "asdf", "sdfafsdas", "Sasdfafafsasm" }
-    };
-    return info;
-});
-
 app.UseRouting();
 
 app.UseCors();

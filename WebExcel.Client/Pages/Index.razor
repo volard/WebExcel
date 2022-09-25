@@ -4,7 +4,7 @@
 @using System.Net.Http.Headers
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.Extensions.Logging
-@*@using WebExcel.Shared*@
+@using WebExcel.Shared
 @using System.Text;
 @using System.Text.Json;
 
@@ -23,12 +23,10 @@
         <table class="table">
             <thead>
                 <tr>
-                    Console.WriteLine($"key: {person.Key}  value: {person.Value}");
-
                     @foreach (var header_item in uploadResult.Data)
                     {
                         <th>@header_item.Key</th>
-                    }   
+                    }
                 </tr>
             </thead>
             <tbody>
@@ -46,23 +44,12 @@
 
             </tbody>
         </table>
-        <br />
-        <br />
-        <br />
     }
 }
 
 @code {
     private long maxFileSize = 1024 * 1000;
     private bool isLoading;
-    public class UploadResult
-    {
-        public Dictionary<string, List<string>>? Data { get; set; }
-        public bool Uploaded { get; set; }
-        public string? FileName { get; set; }
-        public string? StoredFileName { get; set; }
-        public int ErrorCode { get; set; }
-    }
 
     UploadResult? uploadResult;
 
@@ -70,7 +57,6 @@
 
     async Task LoadFiles(InputFileChangeEventArgs e)
     {
-        //using var content = new MultipartFormDataContent();
         var file = e.GetMultipleFiles(1)[0];
         if (Path.GetExtension(file.Name) != ".xlsx")
         {
@@ -80,29 +66,17 @@
 
         try
         {
+            var content = new MultipartFormDataContent();
+            var fileContent = new StreamContent(file.OpenReadStream(maxFileSize));
 
-            //var fileContent = new StreamContent(file.OpenReadStream());
-            //fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse(file.ContentType); 
-            //content.Add(
-            //    content: fileContent,
-            //    name: "\"files\"",
-            //    fileName: file.Name
-            //);
-            //upload = true;
-            //message += content;
-
-
-            var content1 = new MultipartFormDataContent();
-            var fileContent1 = new StreamContent(file.OpenReadStream(maxFileSize));
             message = "cliecked     ";
             message += Path.GetExtension(file.Name) + "                     ";
-
             message += (new MediaTypeHeaderValue("multipart/form-data")).ToString() + "        ";
 
-            fileContent1.Headers.ContentType = new MediaTypeHeaderValue("multipart/form-data");
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue("multipart/form-data");
 
-            content1.Add(fileContent1, "\"file\"", file.Name);
-            using var result_api = await Http.PostAsync("https://localhost:7273/api/filesave", content1);
+            content.Add(fileContent, "\"file\"", file.Name);
+            using var result_api = await Http.PostAsync("https://localhost:7273/api/filesave", content);
             uploadResult = await result_api.Content.ReadFromJsonAsync<UploadResult>();
             //message += uploadResult?.FileName ?? "No name found((      ";
             message += await result_api.Content.ReadAsStringAsync();
