@@ -91,9 +91,9 @@ namespace WebExcel.Server.Controllers
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError("{FileName} error on upload (Err: 3): {Message}",
+                    logger.LogError("{FileName} error on upload (Err: 4): {Message}",
                         trustedFileName, ex.Message);
-                    uploadResult.ErrorCode = 1;
+                    uploadResult.ErrorCode = 4;
                 }
 
                 try
@@ -102,7 +102,8 @@ namespace WebExcel.Server.Controllers
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError("parsing is shit: {exception}", ex.Message);
+                    logger.LogError("{FileName} error on parsing (Err: 5): {Message}", 
+                        trustedFileName,ex.Message);
                     uploadResult.ErrorCode = 5;
                 }
             }
@@ -179,6 +180,5 @@ namespace WebExcel.Server.Controllers
 
             return output;
         }
-
     }
 }

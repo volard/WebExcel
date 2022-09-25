@@ -13,13 +13,37 @@ footer, main {
     width: 100%;
 }
 
+.alert {
+    display: flex;
+    position: relative;
+    max-width: 80%;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.lni::before {
+    color: red;
+    font-size: 23px; /*mmagic numbers*/
+}
+
 main {
-    height: 100%;
+    margin-bottom: 200px;
+    min-height: 50vh;
+
     position: relative;
 }
 
+img {
+    margin-top: 2%;
+    margin-bottom: 2%;
+    position: relative;
+    left: 50%;
+    top: 2%;
+    transform: translateX(-50%);
+}
+
 div#app {
-    height: 100vh;
+    min-height: 100vh;
     position: relative;
 }
 
@@ -39,13 +63,17 @@ th {
     pointer-events: none;
 }
 
-table#datatable {
-    top: 15%;
+.table-container {
+    top: 103px;
     position: relative;
-    width: 80%;
-    left: 50%;
-    transform: translateX(-50%);
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    min-width: 80%;
+    margin-left: 30px;
+    margin-right: 30px;
 }
+
 
 
 label {
