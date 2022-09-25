@@ -2,7 +2,7 @@
 {
     public class UploadResult
     {
-        public Dictionary<string, List<string>>? Data { get; set; }
+        public List<Dictionary<string, string>>? Data { get; set; }
         public bool Uploaded { get; set; }
         public string? FileName { get; set; }
         public string? StoredFileName { get; set; }

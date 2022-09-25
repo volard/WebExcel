@@ -1,6 +1,7 @@
 ﻿using ClosedXML.Excel;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections;
 using System.Net;
 using WebExcel.Shared;
 
@@ -108,7 +109,7 @@ namespace WebExcel.Server.Controllers
             return Ok(uploadResult);
         }
 
-        private Dictionary<string, List<string>> GetParsedData(string filePath)
+        private List<Dictionary<string, string>> GetParsedData(string filePath)
         {
             var workbook = new XLWorkbook(filePath);
             if (workbook.IsProtected)
@@ -124,7 +125,8 @@ namespace WebExcel.Server.Controllers
                 throw new Exception("WorkBook doesn't contain any worksheets");
             }
 
-            Dictionary<string, List<string>> output = new();
+            List<Dictionary<string, string>> output = new();
+
             var worksheet = workbook.Worksheet(1);
 
             var firstRowUsed = worksheet.FirstRowUsed();
@@ -134,36 +136,45 @@ namespace WebExcel.Server.Controllers
             }
 
             var content = worksheet.Range(
-                firstRowUsed.RowBelow().RowNumber(),
-                firstRowUsed.FirstCellUsed().Address.ColumnNumber,
+                firstRowUsed.RowBelow().Cell(firstRowUsed.FirstCellUsed().Address.ColumnNumber),
 
-                worksheet.LastRowUsed().RowNumber(),
-                firstRowUsed.LastCellUsed().Address.ColumnNumber
+                worksheet.LastRowUsed().Cell(firstRowUsed.LastCellUsed().Address.ColumnNumber)
             );
 
-            foreach (var cell in firstRowUsed.Cells())
+            List<string> headers = new();
+            foreach (var cell in firstRowUsed.CellsUsed())
             {
-                var underHeaderColumnRange = worksheet.Range(
-                    firstRowUsed.FirstCellUsed().Address,
+                try
+                {
+                    headers.Add(cell.GetValue<string>());
+                }
+                catch (ArgumentException){}
+            }
 
-                    worksheet.Column(firstRowUsed.FirstCellUsed().Address.ColumnNumber)
-                        .LastCellUsed()
-                        .Address
-                );
+            foreach (var row in content.RowsUsed())
+            {
+                if (row.IsEmpty()) continue; // Just to be sure
 
-                output[cell.GetValue<string>()] = underHeaderColumnRange.CellsUsed()
-                    .Select(c => 
-                        {
-                            try
-                            {
-                                return c.GetValue<string>();
-                            } catch (ArgumentException)
-                            {
-                                return "";
-                            }                                            
-                        }
-                    )
-                    .ToList();
+                Dictionary<string, string> temp = new();
+                int index = 0;
+                string currentCellValue;
+
+                foreach (var cell in row.Cells())
+                {
+                    if (firstRowUsed.Cell(cell.Address.ColumnNumber) == null) continue;
+                    try
+                    {
+                        currentCellValue = cell.GetValue<string>();
+                    }
+                    catch (ArgumentException)
+                    {
+                        currentCellValue = "BROKEN DATA";
+                    }
+                    temp[headers[index]] = currentCellValue;
+                    if (index++ >= headers.Count) break;
+                }
+
+                output.Add(temp);
             }
 
             return output;
