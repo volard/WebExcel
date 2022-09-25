@@ -1,0 +1,117 @@
+﻿@page "/"
+@inject HttpClient Http
+@inject HttpClient HttpClient
+@using System.Net.Http.Headers
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.Extensions.Logging
+@using WebExcel.Shared
+@using System.Text;
+@using System.Text.Json;
+
+<PageTitle>Main</PageTitle>
+
+
+
+<label for="filePicker" style="cursor:pointer;">
+    <button type="button" class="main-button btn btn-primary btn-lg">Select a file</button>
+</label>
+<InputFile id="filePicker" style="display: none;" class="form-control" OnChange="@LoadFiles" />
+
+
+@if (uploadResult != null)
+{
+    if (uploadResult.Uploaded && uploadResult.Data != null)
+    {
+        <table id="datatable" class="table table-hover table-bordered">
+            <thead>
+                <tr>
+                    @foreach (var property in uploadResult.Data[0])
+                    {
+                        <th>@property.Key</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var record in uploadResult.Data)
+                {
+                    <tr>
+                        @foreach (var property in record)
+                        {
+                            <td>@property.Value</td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+
+@code {
+    private long maxFileSize = 1024 * 1000;
+    private bool isLoading;
+
+    UploadResult? uploadResult;
+
+    private String message = "Initial state";
+
+    async Task LoadFiles(InputFileChangeEventArgs e)
+    {
+        var file = e.GetMultipleFiles(1)[0];
+        if (Path.GetExtension(file.Name) != ".xlsx")
+        {
+            message = "Only Microsoft Excel file type acceptable";
+            return;
+        }
+
+        try
+        {
+            var content = new MultipartFormDataContent();
+            var fileContent = new StreamContent(file.OpenReadStream(maxFileSize));
+
+            message = "cliecked     ";
+            message += Path.GetExtension(file.Name) + "                     ";
+            message += (new MediaTypeHeaderValue("multipart/form-data")).ToString() + "        ";
+
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue("multipart/form-data");
+
+            content.Add(fileContent, "\"file\"", file.Name);
+            using var result_api = await Http.PostAsync("https://localhost:7273/api/filesave", content);
+            uploadResult = await result_api.Content.ReadFromJsonAsync<UploadResult>();
+            //message += uploadResult?.FileName ?? "No name found((      ";
+            message += await result_api.Content.ReadAsStringAsync();
+
+            //var response = await Http.PostAsync("https:localhost:7273/api/filesave", content1);
+            //message = response.ToString();
+            //await using FileStream fs = new(path, FileMode.Create);
+            //await browserFile.OpenReadStream().CopyToAsync(fs);
+        }
+        catch (Exception ex)
+        {
+            //Logger.LogError("File: {Filename} Error: {Error}",
+            //    file.Name, ex.Message);
+            message += ex.Message;
+        }
+
+
+    }
+
+    //async Task StartProcess()
+    //{
+    //    var postBody = new { Title = "Blazor POST Request Example" };
+    //    try
+    //    {
+    //        using var response = await HttpClient.PostAsJsonAsync("https:reqres.in/api/articles", postBody);
+    //        using var my_response = await HttpClient.PostAsJsonAsync("https:localhost:7273/test", postBody);
+    //        recieved_dict = await my_response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>();
+    //        message = await response.Content.ReadAsStringAsync();
+
+    //        forecasts = await Http.GetFromJsonAsync<WeatherForecast[]>("sample-data/weather.json");
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        message = ex.ToString();
+    //    }
+
+    //}
+
+}
